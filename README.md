@@ -86,6 +86,8 @@ npm run build
 
 Repository totals, file metrics, directory rollups, references, committer-date ranges, manual commit sets, author filtering, and ownership were independently compared against Git CLI output on cJSON. ZIP ingestion was tested with a synthetic repository containing merge, rename, binary-file, and `.mailmap` cases.
 
+A large-repository performance test indexed Redis history—20,938 commits, 47,213 file-change rows, and 1,051 authors—in 31 seconds with zero parser errors.
+
 ## AI declaration
 
 AI-assisted development tools were used for requirements analysis, implementation, debugging, UI construction, and test planning. Generated work was reviewed and validated using TypeScript, ESLint, production builds, browser smoke tests, API tests, and independent Git CLI metric comparisons.
