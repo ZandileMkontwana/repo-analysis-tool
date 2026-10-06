@@ -9,11 +9,18 @@ import {
   RotateCcw,
   Users,
 } from "lucide-react";
-import type { AuthorGroupRow, AuthorRow, Repo } from "@/lib/types";
+import type { AuthorGroupRow, AuthorRow, CommitRow, Repo } from "@/lib/types";
 import { ErrorNotice } from "./ui";
 import { useResource } from "./use-resource";
 
 type AuthorPayload = { authors: AuthorRow[]; groups: AuthorGroupRow[] };
+type CommitPayload = {
+  rows: CommitRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  commitSetSize: number;
+};
 type Mode = "all" | "time" | "manual";
 
 function dateValue(value: string | null) {
@@ -47,12 +54,24 @@ export function DashboardFilters({
     (search.get("hashes") || "").split(",").join("\n"),
   );
   const [authorValue, setAuthorValue] = useState(search.get("authors") || "");
+  const [commitSearch, setCommitSearch] = useState("");
   const authorQuery = useResource<AuthorPayload>(
     `/api/repos/${encodeURIComponent(repoId)}/authors?ref=${encodeURIComponent(refName || "HEAD")}`,
+  );
+  const commitQuery = useResource<CommitPayload>(
+    mode === "manual"
+      ? `/api/repos/${encodeURIComponent(repoId)}/commits?stripHashes=1&ref=${encodeURIComponent(refName || "HEAD")}&q=${encodeURIComponent(commitSearch)}&pageSize=50`
+      : null,
   );
   const groups = authorQuery.data?.groups || [];
   const authors = authorQuery.data?.authors || [];
   const grouped = new Set(groups.flatMap((g) => g.members));
+  const selectedHashes = new Set(
+    hashes
+      .split(/[\s,]+/)
+      .map((hash) => hash.trim())
+      .filter(Boolean),
+  );
   const activeCount = [
     search.has("ref"),
     search.has("from") || search.has("to") || search.has("hashes"),
@@ -86,6 +105,13 @@ export function DashboardFilters({
     }
     if (authorValue) next.set("authors", authorValue);
     router.push(`${pathname}${next.size ? `?${next}` : ""}`, { scroll: false });
+  }
+
+  function toggleCommit(hash: string) {
+    const next = new Set(selectedHashes);
+    if (next.has(hash)) next.delete(hash);
+    else next.add(hash);
+    setHashes([...next].join("\n"));
   }
 
   function reset() {
@@ -213,19 +239,72 @@ export function DashboardFilters({
           </div>
         )}
         {mode === "manual" && (
-          <label className="manual-field">
-            <span>Commit hashes</span>
-            <textarea
-              rows={3}
-              value={hashes}
-              onChange={(e) => setHashes(e.target.value)}
-              placeholder="One hash per line, or comma-separated"
+          <div className="manual-field">
+            <div className="commit-picker-heading">
+              <span>Select commits</span>
+              <b>{selectedHashes.size} selected</b>
+            </div>
+            <input
+              className="commit-search"
+              type="search"
+              value={commitSearch}
+              onChange={(e) => setCommitSearch(e.target.value)}
+              placeholder="Search by message or hash"
+              aria-label="Search commits"
             />
+            <div className="commit-picker" role="group" aria-label="Commits">
+              {commitQuery.loading && <p className="muted">Loading commits…</p>}
+              {commitQuery.error && (
+                <ErrorNotice
+                  message={commitQuery.error}
+                  retry={commitQuery.reload}
+                />
+              )}
+              {!commitQuery.loading &&
+                !commitQuery.error &&
+                commitQuery.data?.rows.length === 0 && (
+                  <p className="muted">No commits match this search.</p>
+                )}
+              {commitQuery.data?.rows.map((commit) => (
+                <label className="commit-option" key={commit.hash}>
+                  <input
+                    type="checkbox"
+                    checked={selectedHashes.has(commit.hash)}
+                    onChange={() => toggleCommit(commit.hash)}
+                  />
+                  <span>
+                    <strong>{commit.subject || "Untitled commit"}</strong>
+                    <small>
+                      <code>{commit.hash.slice(0, 8)}</code> ·{" "}
+                      {commit.authorName} ·{" "}
+                      {new Date(commit.date * 1000).toLocaleDateString()}
+                    </small>
+                  </span>
+                </label>
+              ))}
+            </div>
+            {commitQuery.data &&
+              commitQuery.data.total > commitQuery.data.rows.length && (
+                <small>
+                  Showing the latest {commitQuery.data.rows.length} of{" "}
+                  {commitQuery.data.total} matches. Search to find older
+                  commits.
+                </small>
+              )}
+            <details className="manual-hash-entry">
+              <summary>Paste commit hashes instead</summary>
+              <textarea
+                rows={3}
+                value={hashes}
+                onChange={(e) => setHashes(e.target.value)}
+                placeholder="One hash per line, or comma-separated"
+              />
+            </details>
             <small>
               Only selected non-merge commits reachable from the reference
               contribute to H.
             </small>
-          </label>
+          </div>
         )}
         {authorQuery.error && (
           <ErrorNotice message={authorQuery.error} retry={authorQuery.reload} />

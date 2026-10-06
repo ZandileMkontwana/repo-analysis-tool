@@ -1390,7 +1390,7 @@ tbody tr:hover {
 .filter-grid > label > span,
 .filter-grid legend,
 .range-fields label > span,
-.manual-field > span,
+.commit-picker-heading > span,
 .merge-card label > span {
   display: flex;
   align-items: center;
@@ -1402,6 +1402,7 @@ tbody tr:hover {
 .filter-grid select,
 .range-fields input,
 .manual-field textarea,
+.manual-field .commit-search,
 .merge-card input {
   width: 100%;
   color: var(--foreground);
@@ -1469,6 +1470,78 @@ tbody tr:hover {
   color: var(--muted);
   font-size: 10px;
   margin-top: 7px;
+}
+.commit-picker-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.commit-picker-heading b {
+  color: #d8cbff;
+  font-size: 11px;
+  font-weight: 600;
+}
+.commit-picker {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-top: 10px;
+  border: 1px solid #363b4c;
+  border-radius: 7px;
+  background: #10131b;
+}
+.commit-picker > p {
+  margin: 0;
+  padding: 16px;
+  font-size: 12px;
+}
+.commit-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #272b38;
+  cursor: pointer;
+}
+.commit-option:last-child {
+  border-bottom: 0;
+}
+.commit-option:hover {
+  background: #191d28;
+}
+.commit-option input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+.commit-option > span {
+  min-width: 0;
+}
+.commit-option strong {
+  display: block;
+  overflow: hidden;
+  color: #e1e5ee;
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.commit-option small {
+  margin-top: 3px;
+}
+.commit-option code {
+  color: #b9a5fa;
+}
+.manual-hash-entry {
+  margin-top: 12px;
+}
+.manual-hash-entry summary {
+  width: fit-content;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.manual-hash-entry textarea {
+  margin-top: 8px;
 }
 .filter-actions {
   display: flex;
